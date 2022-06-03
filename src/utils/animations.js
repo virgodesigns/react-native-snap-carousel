@@ -110,13 +110,8 @@ export function shiftAnimatedStyles (index, animatedValue, carouselProps) {
 
 // Stack animation
 // Imitate a deck/stack of cards (see #195)
-// WARNING: The effect had to be visually inverted on Android because this OS doesn't honor the `zIndex`property
-// This means that the item with the higher zIndex (and therefore the tap receiver) remains the one AFTER the currently active item
-// The `elevation` property compensates for that only visually, which is not good enough
 export function stackScrollInterpolator (index, carouselProps) {
-    const range = IS_ANDROID ?
-        [1, 0, -1, -2, -3] :
-        [3, 2, 1, 0, -1];
+    const range = [3, 2, 1, 0, -1];
     const inputRange = getInputRangeFromIndexes(range, index, carouselProps);
     const outputRange = range;
 
@@ -137,40 +132,13 @@ export function stackAnimatedStyles (index, animatedValue, carouselProps, cardOf
         const edgeAlignment = Math.round((sizeRef - (sizeRef * scale)) / 2);
         const offset = Math.round(cardOffset * Math.abs(cardIndex) / scale);
 
-        return IS_ANDROID ?
-            centeredPosition - edgeAlignment - offset :
-            centeredPosition + edgeAlignment + offset;
+        return centeredPosition + edgeAlignment + offset;
     };
 
     const opacityOutputRange = carouselProps.inactiveSlideOpacity === 1 ? [1, 1, 1, 0] : [1, 0.75, 0.5, 0];
 
-    return IS_ANDROID ? {
-        // elevation: carouselProps.data.length - index, // fix zIndex bug visually, but not from a logic point of view
-        opacity: animatedValue.interpolate({
-            inputRange: [-3, -2, -1, 0],
-            outputRange: opacityOutputRange.reverse(),
-            extrapolate: 'clamp'
-        }),
-        transform: [{
-            scale: animatedValue.interpolate({
-                inputRange: [-2, -1, 0, 1],
-                outputRange: [card2Scale, card1Scale, 1, card1Scale],
-                extrapolate: 'clamp'
-            })
-        }, {
-            [translateProp]: animatedValue.interpolate({
-                inputRange: [-3, -2, -1, 0, 1],
-                outputRange: [
-                    getTranslateFromScale(-3, card2Scale),
-                    getTranslateFromScale(-2, card2Scale),
-                    getTranslateFromScale(-1, card1Scale),
-                    0,
-                    sizeRef * 0.5
-                ],
-                extrapolate: 'clamp'
-            })
-        }]
-    } : {
+    return {
+        elevation: carouselProps.data.length - index, // fix zIndex bug visually, but not from a logic point of view
         zIndex: carouselProps.data.length - index,
         opacity: animatedValue.interpolate({
             inputRange: [0, 1, 2, 3],
